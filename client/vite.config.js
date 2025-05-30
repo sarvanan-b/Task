@@ -9,7 +9,7 @@ export default defineConfig({
     port :3000,
     Proxy :{
       "/api":{
-        target:"http://localhost:8800",
+        target:"https://taskify-jhhu.onrender.com",
         changeOrigin: true,
       },
     },
