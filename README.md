@@ -13,7 +13,7 @@ You can log in with the following default admin credentials:
 
 ```
 Email: admin@gmail.com  
-Password: Admin@111
+Password: Admin@123
 ```
 
 ---
