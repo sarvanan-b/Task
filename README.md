@@ -1,6 +1,6 @@
-# Taskify- Fullstack Task Manager (MERN Stack)
+# Taskify- Fullstack Team/Project Manager (MERN Stack)
 
-A cloud-based task management application that enables streamlined task assignment, tracking, and team collaboration. Built using the MERN stack (MongoDB, Express.js, React, Node.js), Redux Toolkit, and Tailwind CSS for an efficient and scalable solution.
+A cloud-based team management application that enables streamlined task assignment, tracking, and team collaboration. Built using the MERN stack (MongoDB, Express.js, React, Node.js), Redux Toolkit, and Tailwind CSS for an efficient and scalable solution.
 
 ## 🔗 Live Demo
 
