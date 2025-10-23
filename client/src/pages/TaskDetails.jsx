@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 import { FaBug, FaTasks, FaThumbsUp, FaUser } from "react-icons/fa";
 import { GrInProgress } from "react-icons/gr";
 import {
+  MdAttachFile,
   MdKeyboardArrowDown,
   MdKeyboardArrowUp,
   MdKeyboardDoubleArrowUp,
@@ -20,6 +21,8 @@ import Loading from "../components/Loader";
 import Tabs from "../components/Tabs";
 import { useGetSingleTaskQuery, useGetSingleTaskForAdminQuery, usePostTaskActivityMutation, usePostTaskActivityForAdminMutation } from "../redux/slices/api/taskApiSlice";
 import { PRIOTITYSTYELS, TASK_TYPE, getInitials } from "../utils";
+import AssetUpload from "../components/AssetUpload";
+import AssetList from "../components/AssetList";
 
 
 
@@ -38,6 +41,7 @@ const bgColor = {
 const TABS = [
   { title: "Task Detail", icon: <FaTasks /> },
   { title: "Activities/Timeline", icon: <RxActivityLog /> },
+  { title: "Assets", icon: <MdAttachFile /> },
 ];
 
 const TASKTYPEICON = {
@@ -226,9 +230,39 @@ const TaskDetails = () => {
 
             </div>
           </>
-        ) : (
+        ) : selected === 1 ? (
           <>
             <Activities activity={data?.task?.activities} id={id}  refetch ={refetch}/>
+          </>
+        ) : (
+          <>
+            <div className='w-full flex flex-col gap-6 bg-white shadow-md p-8 overflow-y-auto'>
+              <div className='flex items-center justify-between'>
+                <h4 className='text-gray-600 font-semibold text-lg'>Task Assets</h4>
+                <span className='text-sm text-gray-500'>
+                  {task?.assets?.length || 0} file(s) uploaded
+                </span>
+              </div>
+              
+              <div className='space-y-6'>
+                <div>
+                  <h5 className='text-md font-medium text-gray-700 mb-3'>Upload Files</h5>
+                  <AssetUpload 
+                    taskId={id} 
+                    onUploadSuccess={refetch}
+                  />
+                </div>
+                
+                <div>
+                  <h5 className='text-md font-medium text-gray-700 mb-3'>Uploaded Files</h5>
+                  <AssetList 
+                    assets={task?.assets} 
+                    taskId={id} 
+                    onAssetDeleted={refetch}
+                  />
+                </div>
+              </div>
+            </div>
           </>
         )}
       </Tabs>

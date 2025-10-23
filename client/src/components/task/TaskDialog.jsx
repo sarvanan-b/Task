@@ -26,7 +26,9 @@ const TaskDialog = ({ task }) => {
 
   const duplicateHandler = async() => {
     try {
+      console.log("Duplicating task:", task._id);
       const res = await duplicateTask(task._id).unwrap();
+      console.log("Duplicate response:", res);
 
       toast.success(res?.message);
 
@@ -35,7 +37,7 @@ const TaskDialog = ({ task }) => {
         window.location.reload();
       },500);
     } catch (err) {
-      console.log(err);
+      console.log("Duplicate error:", err);
       toast.error(err?.data?.message || err.message);
     }
   };
@@ -70,11 +72,11 @@ const TaskDialog = ({ task }) => {
       icon: <AiTwotoneFolderOpen className='mr-2 h-5 w-5' aria-hidden='true' />,
       onClick: () => navigate(`/task/${task._id}`),
     },
-    {
+    ...(user?.isAdmin ? [{
       label: "Edit",
       icon: <MdOutlineEdit className='mr-2 h-5 w-5' aria-hidden='true' />,
       onClick: () => setOpenEdit(true),
-    },
+    }] : []),
     {
       label: "Add Sub-Task",
       icon: <MdAdd className='mr-2 h-5 w-5' aria-hidden='true' />,
@@ -85,6 +87,11 @@ const TaskDialog = ({ task }) => {
       icon: <HiDuplicate className='mr-2 h-5 w-5' aria-hidden='true' />,
       onClick: () => duplicateHandler(),
     },
+    ...(user?.isAdmin ? [{
+      label: "Delete",
+      icon: <RiDeleteBin6Line className='mr-2 h-5 w-5' aria-hidden='true' />,
+      onClick: () => deleteClicks(),
+    }] : []),
   ];
 
   return (

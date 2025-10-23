@@ -137,20 +137,23 @@ const Table = ({ tasks }) => {
       </td>
 
       <td className='py-2 flex gap-2 md:gap-4 justify-end'>
-        <Button
-          className='text-blue-600 hover:text-blue-500 sm:px-0 text-sm md:text-base'
-          label='Edit'
-          type='button'
-          onClick={() => editHandler(task)}
+        {user?.isAdmin && (
+          <>
+            <Button
+              className='text-blue-600 hover:text-blue-500 sm:px-0 text-sm md:text-base'
+              label='Edit'
+              type='button'
+              onClick={() => editHandler(task)}
+            />
 
-        />
-
-        <Button
-          className='text-red-700 hover:text-red-500 sm:px-0 text-sm md:text-base'
-          label='Delete'
-          type='button'
-          onClick={() => deleteClicks(task._id)}
-        />
+            <Button
+              className='text-red-700 hover:text-red-500 sm:px-0 text-sm md:text-base'
+              label='Delete'
+              type='button'
+              onClick={() => deleteClicks(task._id)}
+            />
+          </>
+        )}
       </td>
     </tr>
   );

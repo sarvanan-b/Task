@@ -82,8 +82,8 @@ const ChangePassword = ({ open, setOpen }) => {
             register={register('password', {
               required: 'New Password is required!',
               minLength: {
-                value: 6,
-                message: 'Password must be at least 6 characters'
+                value: 8,
+                message: 'Password must be at least 8 characters'
               }
             })}
             error={errors.password ? errors.password.message : ''}

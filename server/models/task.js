@@ -40,6 +40,17 @@ const taskSchema = new Schema(
         tag: String,
       },
     ],
+    assets: [
+      {
+        filename: { type: String, required: true }, // Server filename
+        originalName: { type: String, required: true }, // Original filename
+        path: { type: String, required: true }, // File path on server
+        size: { type: Number, required: true }, // File size in bytes
+        mimetype: { type: String, required: true }, // MIME type
+        uploadedBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
+        uploadedAt: { type: Date, default: Date.now },
+      },
+    ],
     description: { type: String, default: "" }, // Added description field
     team: [{ type: Schema.Types.ObjectId, ref: "User" }],
     isTrashed: { type: Boolean, default: false },

@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
+import { IoEye, IoEyeOff } from "react-icons/io5";
 import Textbox from "../components/Textbox";
 import Button from "../components/Button";
 import Loading from "../components/Loader";
@@ -10,6 +11,8 @@ import { useRegisterMutation } from "../redux/slices/api/authApiSlice";
 
 const Register = () => {
   const { user } = useSelector((state) => state.auth);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
@@ -22,20 +25,10 @@ const Register = () => {
 
   const submitHandler = async (data) => {
    try {
-    // Convert checkbox value to boolean
-    const registrationData = {
-      ...data,
-      isAdmin: data.isAdmin || false
-    };
-
+    // Remove confirmPassword from data before sending to backend
+    const { confirmPassword, ...registrationData } = data;
     await registerUser(registrationData).unwrap();
-    
-    if (registrationData.isAdmin) {
-      toast.success("Admin account created successfully! Please login.");
-    } else {
-      toast.success("Registration successful! Please login.");
-    }
-    
+    toast.success("Registration successful! Please login.");
     navigate("/login");
     
    } catch (error) {
@@ -109,73 +102,63 @@ const Register = () => {
               error={errors.email ? errors.email.message : ""}
             />
 
-            {/* Title */}
-            <Textbox
-              placeholder="Your job title"
-              type="text"
-              name="title"
-              label="Job Title"
-              className="w-full p-3 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:ring-2 focus:ring-green-500"
-              register={register("title", {
-                required: "Job title is required!",
-              })}
-              error={errors.title ? errors.title.message : ""}
-            />
-
-            {/* Role */}
+            {/* Password */}
             <div className="flex flex-col gap-2">
-              <label className="text-white font-medium">Role</label>
-              <select
-                {...register("role", { required: "Role is required!" })}
-                className="w-full p-3 rounded-lg bg-white bg-opacity-20 text-white focus:ring-2 focus:ring-green-500"
-              >
-                <option value="">Select your role</option>
-                <option value="developer">Developer</option>
-                <option value="designer">Designer</option>
-                <option value="manager">Manager</option>
-                <option value="admin">Administrator</option>
-                <option value="other">Other</option>
-              </select>
-              {errors.role && (
-                <span className="text-red-300 text-sm">{errors.role.message}</span>
+              <label className="text-white font-medium">Password</label>
+              <div className="relative">
+                <input
+                  {...register("password", {
+                    required: "Password is required!",
+                    minLength: {
+                      value: 8,
+                      message: "Password must be at least 8 characters",
+                    },
+                  })}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Your password"
+                  className="w-full p-3 pr-12 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:ring-2 focus:ring-green-500 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300"
+                >
+                  {showPassword ? <IoEyeOff size={20} /> : <IoEye size={20} />}
+                </button>
+              </div>
+              {errors.password && (
+                <span className="text-red-300 text-sm">{errors.password.message}</span>
               )}
             </div>
 
-            {/* Admin Privileges */}
+            {/* Confirm Password */}
             <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-3">
+              <label className="text-white font-medium">Confirm Password</label>
+              <div className="relative">
                 <input
-                  type="checkbox"
-                  {...register("isAdmin")}
-                  className="w-4 h-4 text-green-500 bg-white bg-opacity-20 border-white rounded focus:ring-green-500 focus:ring-2"
+                  {...register("confirmPassword", {
+                    required: "Please confirm your password!",
+                    validate: (value) => {
+                      const password = document.querySelector('input[name="password"]').value;
+                      return value === password || "Passwords do not match!";
+                    }
+                  })}
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm your password"
+                  className="w-full p-3 pr-12 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:ring-2 focus:ring-green-500 focus:outline-none"
                 />
-                <label className="text-white text-sm font-medium">
-                  Register as Administrator
-                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300"
+                >
+                  {showConfirmPassword ? <IoEyeOff size={20} /> : <IoEye size={20} />}
+                </button>
               </div>
-              <div className="bg-yellow-500 bg-opacity-20 border border-yellow-400 rounded-lg p-3">
-                <p className="text-yellow-200 text-xs">
-                  ⚠️ <strong>Admin Warning:</strong> Administrator accounts have full access to manage users, tasks, and system settings. Only select this if you are authorized to have admin privileges.
-                </p>
-              </div>
+              {errors.confirmPassword && (
+                <span className="text-red-300 text-sm">{errors.confirmPassword.message}</span>
+              )}
             </div>
-
-            {/* Password */}
-            <Textbox
-              placeholder="Your password"
-              type="password"
-              name="password"
-              label="Password"
-              className="w-full p-3 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:ring-2 focus:ring-green-500"
-              register={register("password", {
-                required: "Password is required!",
-                minLength: {
-                  value: 6,
-                  message: "Password must be at least 6 characters",
-                },
-              })}
-              error={errors.password ? errors.password.message : ""}
-            />
 
             {/* Submit Button */}
             {isLoading ? ( <Loading/>):<Button

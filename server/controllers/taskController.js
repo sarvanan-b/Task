@@ -1,6 +1,7 @@
 import Notice from "../models/notification.js";
 import Task from "../models/task.js";
 import User from "../models/user.js";
+import fs from "fs";
 
 export const createTask = async (req, res) => {
   try {
@@ -52,18 +53,20 @@ export const duplicateTask = async (req, res) => {
 
     const task = await Task.findById(id);
 
+    if (!task) {
+      return res.status(404).json({ status: false, message: "Task not found" });
+    }
+
     const newTask = await Task.create({
-      ...task,
       title: task.title + " - Duplicate",
+      description: task.description,
+      priority: task.priority,
+      stage: task.stage,
+      team: task.team,
+      subTasks: task.subTasks,
+      date: new Date(),
+      isTrashed: false,
     });
-
-    newTask.team = task.team;
-    newTask.subTasks = task.subTasks;
-    newTask.description = task.description;
-    newTask.priority = task.priority;
-    newTask.stage = task.stage;
-
-    await newTask.save();
 
     //alert users of the task
     let text = "New task has been assigned to you";

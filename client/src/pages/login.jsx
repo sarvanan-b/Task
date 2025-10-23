@@ -1,8 +1,9 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
+import { IoEye, IoEyeOff } from "react-icons/io5";
 import Textbox from "../components/Textbox";
 import Button from "../components/Button";
 import Loading from "../components/Loader";
@@ -11,6 +12,7 @@ import { setCredentials } from "../redux/slices/authSlice";
 
 const Login = () => {
   const { user } = useSelector((state) => state.auth);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -91,17 +93,33 @@ const Login = () => {
             />
 
             {/* Password */}
-            <Textbox
-              placeholder="Your password"
-              type="password"
-              name="password"
-              label="Password"
-              className="w-full p-3 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:ring-2 focus:ring-pink-500"
-              register={register("password", {
-                required: "Password is required!",
-              })}
-              error={errors.password ? errors.password.message : ""}
-            />
+            <div className="flex flex-col gap-2">
+              <label className="text-white font-medium">Password</label>
+              <div className="relative">
+                <input
+                  {...register("password", {
+                    required: "Password is required!",
+                    minLength: {
+                      value: 8,
+                      message: "Password must be at least 8 characters long"
+                    }
+                  })}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Your password"
+                  className="w-full p-3 pr-12 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:ring-2 focus:ring-pink-500 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300"
+                >
+                  {showPassword ? <IoEyeOff size={20} /> : <IoEye size={20} />}
+                </button>
+              </div>
+              {errors.password && (
+                <span className="text-red-300 text-sm">{errors.password.message}</span>
+              )}
+            </div>
 
             <div className="flex justify-between text-sm">
               <span className="text-white hover:underline cursor-pointer">
