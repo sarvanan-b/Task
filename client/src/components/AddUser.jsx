@@ -28,14 +28,21 @@ const AddUser = ({ open, setOpen, userData }) => {
   const handleOnSubmit = async (data) => {
     try {
       if(userData){
+        // Editing existing user profile
         const  result = await updateUser(data).unwrap();
-        toastww.success("Profile Updated successfully")
+        toast.success("Profile Updated successfully")
 
-        if (userData?._id === user>_id){
+        if (userData?._id === user?._id){
             dispatch(setCredentials({...result.user}));
         }
         
       }else{
+        // Creating new user - only admins can do this
+        if (!user?.isAdmin) {
+          toast.error("Only administrators can add new users");
+          return;
+        }
+        
         await addNewUser({...data,password:data.email}).unwrap();
         toast.success("New User added successfully")
       }
@@ -56,7 +63,7 @@ const AddUser = ({ open, setOpen, userData }) => {
             as='h2'
             className='text-base font-bold leading-6 text-gray-900 mb-4'
           >
-            {userData ? "UPDATE PROFILE" : "ADD NEW USER"}
+            {userData ? "UPDATE PROFILE" : (user?.isAdmin ? "ADD NEW USER" : "PROFILE")}
           </Dialog.Title>
           <div className='mt-2 flex flex-col gap-6'>
             <Textbox
@@ -112,18 +119,32 @@ const AddUser = ({ open, setOpen, userData }) => {
             </div>
           ) : (
             <div className='py-3 mt-4 sm:flex sm:flex-row-reverse'>
-              <Button
-                type='submit'
-                className='bg-blue-600 px-8 text-sm font-semibold text-white hover:bg-blue-700  sm:w-auto'
-                label='Submit'
-              />
+              {(!userData && !user?.isAdmin) ? (
+                <div className='text-center py-4'>
+                  <p className='text-gray-500 text-sm'>Only administrators can add new users</p>
+                  <Button
+                    type='button'
+                    className='bg-white px-5 text-sm font-semibold text-gray-900 sm:w-auto mt-2'
+                    onClick={() => setOpen(false)}
+                    label='Close'
+                  />
+                </div>
+              ) : (
+                <>
+                  <Button
+                    type='submit'
+                    className='bg-blue-600 px-8 text-sm font-semibold text-white hover:bg-blue-700  sm:w-auto'
+                    label='Submit'
+                  />
 
-              <Button
-                type='button'
-                className='bg-white px-5 text-sm font-semibold text-gray-900 sm:w-auto'
-                onClick={() => setOpen(false)}
-                label='Cancel'
-              />
+                  <Button
+                    type='button'
+                    className='bg-white px-5 text-sm font-semibold text-gray-900 sm:w-auto'
+                    onClick={() => setOpen(false)}
+                    label='Cancel'
+                  />
+                </>
+              )}
             </div>
           )}
         </form>

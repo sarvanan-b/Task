@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   MdAttachFile,
   MdKeyboardArrowDown,
@@ -7,6 +7,7 @@ import {
   MdKeyboardDoubleArrowUp,
 } from "react-icons/md";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { BGS, PRIOTITYSTYELS, TASK_TYPE, formatDate } from "../utils";
 import TaskDialog from "./task/TaskDialog";
 import { BiMessageAltDetail } from "react-icons/bi";
@@ -23,11 +24,23 @@ const ICONS = {
 
 const TaskCard = ({ task }) => {
   const { user } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+
+  const handleCardClick = (e) => {
+    // Don't navigate if clicking on the add subtask button or task dialog
+    if (e.target.closest('button') || e.target.closest('[role="button"]')) {
+      return;
+    }
+    navigate(`/task/${task._id}`);
+  };
 
   return (
     <>
-      <div className='w-full h-fit bg-white shadow-md p-4 rounded'>
+      <div 
+        className='w-full h-fit bg-white shadow-md p-4 rounded cursor-pointer hover:shadow-lg transition-shadow'
+        onClick={handleCardClick}
+      >
         <div className='w-full flex justify-between'>
           <div
             className={clsx(
@@ -113,8 +126,7 @@ const TaskCard = ({ task }) => {
         <div className='w-full pb-2'>
           <button
             onClick={() => setOpen(true)}
-            disabled={user.isAdmin ? false : true}
-            className='w-full flex gap-4 items-center text-sm text-gray-500 font-semibold disabled:cursor-not-allowed disabled::text-gray-300'
+            className='w-full flex gap-4 items-center text-sm text-gray-500 font-semibold hover:text-gray-700'
           >
             <IoMdAdd className='text-lg' />
             <span>ADD SUBTASK</span>

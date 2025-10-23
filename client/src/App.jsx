@@ -10,6 +10,7 @@ import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import Dashboard from './pages/Dashboard';
 import Login from './pages/login';
+import Register from './pages/register';
 import TaskDetails from './pages/TaskDetails';
 import Tasks from './pages/Tasks';
 import Trash from './pages/Trash';
@@ -111,6 +112,7 @@ function App() {
         </Route>
 
         <Route path='/log-in' element={<Login />} />
+        <Route path='/register' element={<Register />} />
       </Routes>
 
       <Toaster richColors />

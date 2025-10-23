@@ -1,12 +1,14 @@
 import { useForm } from "react-hook-form";
+import { useSelector } from "react-redux";
 import ModalWrapper from "../ModalWrapper";
 import { Dialog } from "@headlessui/react";
 import Textbox from "../Textbox";
 import Button from "../Button";
-import { useCreateSubTaskMutation } from "../../redux/slices/api/taskApiSlice";
+import { useCreateSubTaskMutation, useCreateSubTaskForAdminMutation } from "../../redux/slices/api/taskApiSlice";
 import { toast } from "sonner";
 
 const AddSubTask = ({ open, setOpen, id }) => {
+  const { user } = useSelector((state) => state.auth);
   const {
     register,
     handleSubmit,
@@ -14,10 +16,15 @@ const AddSubTask = ({ open, setOpen, id }) => {
   } = useForm();
 
   const [addSbTask] = useCreateSubTaskMutation();
+  const [addSbTaskForAdmin] = useCreateSubTaskForAdminMutation();
 
   const handleOnSubmit = async (data) => {
     try {
-      const res = await addSbTask({ data, id }).unwrap();
+      // Use admin mutation if user is admin, otherwise use regular mutation
+      const res = user?.isAdmin 
+        ? await addSbTaskForAdmin({ data, id }).unwrap()
+        : await addSbTask({ data, id }).unwrap();
+      
       toast.success(res.message);
       setTimeout(() => {
         setOpen(false);

@@ -1,14 +1,14 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import Title from "../components/Title";
 import Button from "../components/Button";
 import { IoMdAdd } from "react-icons/io";
-import { summary } from "../assets/data";
 import { getInitials } from "../utils";
 import clsx from "clsx";
 import ConfirmationDialog, { UserAction } from "../components/Dialogs";
 import AddUser from "../components/AddUser";
 import { useDeleteUserMutation, useGetTeamListQuery, useUserActionMutation } from "../redux/slices/api/userApiSlice";
 import { toast } from "sonner";
+import { useSelector } from "react-redux";
 
 const Users = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -16,7 +16,7 @@ const Users = () => {
   const [openAction, setOpenAction] = useState(false);
   const [selected, setSelected] = useState(null);
 
-
+  const { user } = useSelector((state) => state.auth);
   const {data,isLoading,error,refetch} = useGetTeamListQuery();
   const [deleteUser] = useDeleteUserMutation();
   const [userAction] = useUserActionMutation();
@@ -60,6 +60,11 @@ const Users = () => {
   
 
   const deleteClick = (id) => {
+    // Prevent admin from deleting their own profile
+    if (id === user?._id) {
+      toast.error("You cannot delete your own profile. Please ask another admin to delete your account.");
+      return;
+    }
     setSelected(id);
     setOpenDialog(true);
   };
@@ -80,82 +85,118 @@ const Users = () => {
         <th className='py-2'>Title</th>
         <th className='py-2'>Email</th>
         <th className='py-2'>Role</th>
-        <th className='py-2'>Active</th>
+        {user?.isAdmin && <th className='py-2'>Active</th>}
+        {user?.isAdmin && <th className='py-2'>Actions</th>}
       </tr>
     </thead>
   );
 
-  const TableRow = ({ user }) => (
+  /* eslint-disable react/prop-types */
+  const TableRow = ({ user: teamMember }) => (
     <tr className='border-b border-gray-200 text-gray-600 hover:bg-gray-400/10'>
       <td className='p-2'>
         <div className='flex items-center gap-3'>
           <div className='w-9 h-9 rounded-full text-white flex items-center justify-center text-sm bg-blue-700'>
             <span className='text-xs md:text-sm text-center'>
-              {getInitials(user.name)}
+              {getInitials(teamMember.name)}
             </span>
           </div>
-          {user.name}
+          {teamMember.name}
         </div>
       </td>
 
-      <td className='p-2'>{user.title}</td>
-      <td className='p-2'>{user.email || "user.email"}</td>
-      <td className='p-2'>{user.role}</td>
+      <td className='p-2'>{teamMember.title}</td>
+      <td className='p-2'>{teamMember.email || "user.email"}</td>
+      <td className='p-2'>{teamMember.role}</td>
 
-      <td>
-        <button
-          onClick={() => userStatusClick(user)}
-          className={clsx(
-            "w-fit px-4 py-1 rounded-full",
-            user?.isActive ? "bg-blue-200" : "bg-yellow-100"
+      {user?.isAdmin && (
+        <td>
+          <button
+            onClick={() => userStatusClick(teamMember)}
+            className={clsx(
+              "w-fit px-4 py-1 rounded-full",
+              teamMember?.isActive ? "bg-blue-200" : "bg-yellow-100"
+            )}
+          >
+            {teamMember?.isActive ? "Active" : "Disabled"}
+          </button>
+        </td>
+      )}
+
+      {user?.isAdmin && (
+        <td className='p-2 flex gap-4 justify-end'>
+          <Button
+            className='text-blue-600 hover:text-blue-500 font-semibold sm:px-0'
+            label='Edit'
+            type='button'
+            onClick={() => editClick(teamMember)}
+          />
+
+          {/* Prevent admin from deleting their own profile */}
+          {teamMember?._id !== user?._id && (
+            <Button
+              className='text-red-700 hover:text-red-500 font-semibold sm:px-0'
+              label='Delete'
+              type='button'
+              onClick={() => deleteClick(teamMember?._id)}
+            />
           )}
-        >
-          {user?.isActive ? "Active" : "Disabled"}
-        </button>
-      </td>
-
-      <td className='p-2 flex gap-4 justify-end'>
-        <Button
-          className='text-blue-600 hover:text-blue-500 font-semibold sm:px-0'
-          label='Edit'
-          type='button'
-          onClick={() => editClick(user)}
-        />
-
-        <Button
-          className='text-red-700 hover:text-red-500 font-semibold sm:px-0'
-          label='Delete'
-          type='button'
-          onClick={() => deleteClick(user?._id)}
-        />
-      </td>
+          
+          {/* Show disabled delete button for self-deletion */}
+          {teamMember?._id === user?._id && (
+            <Button
+              className='text-gray-400 font-semibold sm:px-0 cursor-not-allowed opacity-50'
+              label='Delete'
+              type='button'
+              disabled={true}
+            />
+          )}
+        </td>
+      )}
     </tr>
   );
+  /* eslint-enable react/prop-types */
 
   return (
     <>
       <div className='w-full md:px-1 px-0 mb-6'>
         <div className='flex items-center justify-between mb-8'>
           <Title title='  Team Members' />
-          <Button
-            label='Add New User'
-            icon={<IoMdAdd className='text-lg' />}
-            className='flex flex-row-reverse gap-1 items-center bg-blue-600 text-white rounded-md 2xl:py-2.5'
-            onClick={() => setOpen(true)}
-          />
+          {user?.isAdmin && (
+            <Button
+              label='Add New User'
+              icon={<IoMdAdd className='text-lg' />}
+              className='flex flex-row-reverse gap-1 items-center bg-blue-600 text-white rounded-md 2xl:py-2.5'
+              onClick={() => setOpen(true)}
+            />
+          )}
         </div>
 
         <div className='bg-white px-2 md:px-4 py-4 shadow-md rounded'>
-          <div className='overflow-x-auto'>
-            <table className='w-full mb-5'>
-              <TableHeader />
-              <tbody>
-                {data?.map((user, index) => (
-                  <TableRow key={index} user={user} />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {isLoading ? (
+            <div className='flex justify-center items-center py-8'>
+              <div className='text-gray-500'>Loading team members...</div>
+            </div>
+          ) : error ? (
+            <div className='flex justify-center items-center py-8'>
+              <div className='text-red-500'>Error loading team members. Please try again.</div>
+            </div>
+          ) : data && data.length > 0 ? (
+            <div className='overflow-x-auto'>
+              <table className='w-full mb-5'>
+                <TableHeader />
+                <tbody>
+                  {data.map((teamMember, index) => (
+                    <TableRow key={index} user={teamMember} />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className='flex justify-center items-center py-8'>
+              <div className='text-gray-500'>No team members found.</div>
+            </div>
+          )}
         </div>
       </div>
 

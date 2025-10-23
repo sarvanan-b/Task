@@ -188,23 +188,49 @@ export const markNotificationRead = async (req, res) => {
 export const changeUserPassword = async (req, res) => {
   try {
     const { userId } = req.user;
+    const { oldPassword, password } = req.body;
+
+    // Validate required fields
+    if (!oldPassword || !password) {
+      return res.status(400).json({ 
+        status: false, 
+        message: "Current password and new password are required" 
+      });
+    }
 
     const user = await User.findById(userId);
 
-    if (user) {
-      user.password = req.body.password;
-
-      await user.save();
-
-      user.password = undefined;
-
-      res.status(201).json({
-        status: true,
-        message: `Password chnaged successfully.`,
-      });
-    } else {
-      res.status(404).json({ status: false, message: "User not found" });
+    if (!user) {
+      return res.status(404).json({ status: false, message: "User not found" });
     }
+
+    // Verify old password
+    const isOldPasswordValid = await user.comparePassword(oldPassword);
+    if (!isOldPasswordValid) {
+      return res.status(400).json({ 
+        status: false, 
+        message: "Current password is incorrect" 
+      });
+    }
+
+    // Check if new password is different from old password
+    if (oldPassword === password) {
+      return res.status(400).json({ 
+        status: false, 
+        message: "New password must be different from current password" 
+      });
+    }
+
+    // Update password
+    user.password = password;
+    await user.save();
+
+    user.password = undefined;
+
+    res.status(200).json({
+      status: true,
+      message: "Password changed successfully.",
+    });
   } catch (error) {
     console.log(error);
     return res.status(400).json({ status: false, message: error.message });
@@ -240,6 +266,24 @@ export const activateUserProfile = async (req, res) => {
 export const deleteUserProfile = async (req, res) => {
   try {
     const { id } = req.params;
+    const { userId } = req.user;
+
+    // Prevent admin from deleting their own profile
+    if (id === userId) {
+      return res.status(400).json({ 
+        status: false, 
+        message: "You cannot delete your own profile. Please ask another admin to delete your account." 
+      });
+    }
+
+    // Check if user exists
+    const userToDelete = await User.findById(id);
+    if (!userToDelete) {
+      return res.status(404).json({ 
+        status: false, 
+        message: "User not found" 
+      });
+    }
 
     await User.findByIdAndDelete(id);
 

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useSelector } from "react-redux";
 import { BiMessageAltDetail } from "react-icons/bi";
 import {
   MdAttachFile,
@@ -13,7 +14,7 @@ import { FaList } from "react-icons/fa";
 import UserInfo from "../UserInfo";
 import Button from "../Button";
 import ConfirmationDialog from "../Dialogs";
-import { useTrashTaskMutation } from "../../redux/slices/api/taskApiSlice";
+import { useTrashTaskMutation, useTrashTaskForAdminMutation } from "../../redux/slices/api/taskApiSlice";
 import AddTask from "./AddTask";
 
 const ICONS = {
@@ -23,10 +24,12 @@ const ICONS = {
 };
 
 const Table = ({ tasks }) => {
+  const { user } = useSelector((state) => state.auth);
   const [openDialog, setOpenDialog] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [selected, setSelected] = useState(null);
-  const [trashTask] =  useTrashTaskMutation();
+  const [trashTask] = useTrashTaskMutation();
+  const [trashTaskForAdmin] = useTrashTaskForAdminMutation();
 
   const deleteClicks = (id) => {
     setSelected(id);
@@ -35,7 +38,11 @@ const Table = ({ tasks }) => {
 
   const deleteHandler = async () => {
     try {
-      const res = await trashTask(selected).unwrap(); // Pass only task._id if isTrashed isn't needed
+      // Use admin mutation if user is admin, otherwise use regular mutation
+      const res = user?.isAdmin 
+        ? await trashTaskForAdmin(selected).unwrap()
+        : await trashTask(selected).unwrap();
+      
       toast.success(res?.message);
 
       setTimeout(() => {

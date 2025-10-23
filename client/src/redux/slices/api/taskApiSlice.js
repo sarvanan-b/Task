@@ -20,6 +20,65 @@ export const taskApiSlice = apiSlice.injectEndpoints({
             }),
         }),
 
+        getAllTasksForAdmin: builder.query({
+            query: ({strQuery,isTrashed,search}) => ({
+                url: `${TASKS_URL}/admin/all?stage=${strQuery}&isTrashed=${isTrashed}&search=${search}`,
+                method: "GET",
+                credentials: "include",
+            }),
+        }),
+
+        getSingleTaskForAdmin: builder.query({
+            query: (id) => ({
+                url: `${TASKS_URL}/admin/${id}`,
+                method: "GET",
+                credentials: "include",
+            }),
+        }),
+
+        updateTaskForAdmin: builder.mutation({
+            query: (data) => ({
+                url: `${TASKS_URL}/admin/update/${data._id}`,
+                method: "PUT",
+                body: data,
+                credentials: "include",
+            }),
+        }),
+
+        trashTaskForAdmin: builder.mutation({
+            query: (id) => ({
+                url: `${TASKS_URL}/admin/${id}`,
+                method: "PUT",
+                credentials: "include",
+            }),
+        }),
+
+        createSubTaskForAdmin: builder.mutation({
+            query: ({data,id}) => ({
+                url: `${TASKS_URL}/admin/create-subtask/${id}`,
+                method: "PUT",
+                body:data,
+                credentials: "include",
+            }),
+        }),
+
+        postTaskActivityForAdmin: builder.mutation({
+            query: ({data,id}) => ({
+                url: `${TASKS_URL}/admin/activity/${id}`,
+                method: "POST",
+                body:data,
+                credentials: "include",
+            }),
+        }),
+
+        deleteRestoreTaskForAdmin: builder.mutation({
+            query: ({id,actionType}) => ({
+                url: `${TASKS_URL}/admin/delete-restore/${id}?actionType=${actionType}`,
+                method: "DELETE",
+                credentials: "include",
+            }),
+        }),
+
         createTask: builder.mutation({
             query: (data) => ({
                 url: `${TASKS_URL}/create`,
@@ -96,6 +155,13 @@ export const taskApiSlice = apiSlice.injectEndpoints({
 
 export const { useGetDashboardStatsQuery ,
     useGetAllTaskQuery,
+    useGetAllTasksForAdminQuery,
+    useGetSingleTaskForAdminQuery,
+    useUpdateTaskForAdminMutation,
+    useTrashTaskForAdminMutation,
+    useCreateSubTaskForAdminMutation,
+    usePostTaskActivityForAdminMutation,
+    useDeleteRestoreTaskForAdminMutation,
     useCreateTaskMutation,
     useDuplicateTaskMutation,
     useUpdateTaskMutation,

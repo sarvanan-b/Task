@@ -3,6 +3,7 @@ import { FaList } from "react-icons/fa";
 import { IoMdAdd } from "react-icons/io";
 import { MdGridView } from "react-icons/md";
 import { useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
 import BoardView from "../components/BoardView";
 import Button from "../components/Button";
 import Loading from "../components/Loader";
@@ -11,7 +12,7 @@ import AddTask from "../components/task/AddTask";
 import Table from "../components/task/Table";
 import TaskTitle from "../components/TaskTitle";
 import Title from "../components/Title";
-import { useGetAllTaskQuery } from "../redux/slices/api/taskApiSlice";
+import { useGetAllTaskQuery, useGetAllTasksForAdminQuery } from "../redux/slices/api/taskApiSlice";
 
 const TABS = [
   { title: "Board View", icon: <MdGridView /> },
@@ -26,6 +27,7 @@ const TASK_TYPE = {
 
 const Tasks = () => {
   const params = useParams();
+  const { user } = useSelector((state) => state.auth);
 
   const [selected, setSelected] = useState(0);
   const [open, setOpen] = useState(false);
@@ -33,11 +35,18 @@ const Tasks = () => {
 
   const status = params?.status || "";
 
-  const {data,isLoading} = useGetAllTaskQuery({
-    strQuery : status,
-    isTrashed : "",
-    search:"",
-  })
+  // Use admin query if user is admin, otherwise use regular query
+  const {data,isLoading} = user?.isAdmin 
+    ? useGetAllTasksForAdminQuery({
+        strQuery : status,
+        isTrashed : "",
+        search:"",
+      })
+    : useGetAllTaskQuery({
+        strQuery : status,
+        isTrashed : "",
+        search:"",
+      });
 
   return isLoading ? (
     <div className='py-10'>
@@ -48,7 +57,7 @@ const Tasks = () => {
       <div className='flex items-center justify-between mb-4'>
         <Title title={status ? `${status} Tasks` : "Tasks"} />
 
-        {!status && (
+        {!status && user?.isAdmin && (
           <Button
             onClick={() => setOpen(true)}
             label='Create Task'

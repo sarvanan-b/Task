@@ -1,4 +1,5 @@
 import React, { Fragment, useState } from "react";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { AiTwotoneFolderOpen } from "react-icons/ai";
 import { BsThreeDots } from "react-icons/bs";
@@ -9,16 +10,18 @@ import { Menu, Transition } from "@headlessui/react";
 import AddTask from "./AddTask";
 import AddSubTask from "./AddSubTask";
 import ConfirmationDialog from "../Dialogs";
-import { useDuplicateTaskMutation, useTrashTaskMutation } from "../../redux/slices/api/taskApiSlice";
+import { useDuplicateTaskMutation, useTrashTaskMutation, useTrashTaskForAdminMutation } from "../../redux/slices/api/taskApiSlice";
 import { toast } from "sonner";
 
 const TaskDialog = ({ task }) => {
+  const { user } = useSelector((state) => state.auth);
   const [open, setOpen] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
 
   const navigate = useNavigate();
   const [deleteTask] = useTrashTaskMutation();
+  const [deleteTaskForAdmin] = useTrashTaskForAdminMutation();
   const [duplicateTask]= useDuplicateTaskMutation();
 
   const duplicateHandler = async() => {
@@ -43,7 +46,11 @@ const TaskDialog = ({ task }) => {
 
   const deleteHandler = async () => {
     try {
-      const res = await deleteTask(task._id).unwrap(); // Pass only task._id if isTrashed isn't needed
+      // Use admin mutation if user is admin, otherwise use regular mutation
+      const res = user?.isAdmin 
+        ? await deleteTaskForAdmin(task._id).unwrap()
+        : await deleteTask(task._id).unwrap();
+      
       toast.success(res?.message);
   
       setTimeout(() => {

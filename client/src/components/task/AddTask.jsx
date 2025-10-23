@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useSelector } from "react-redux";
 import ModalWrapper from "../ModalWrapper";
 import { Dialog } from "@headlessui/react";
 import Textbox from "../Textbox";
@@ -6,7 +7,7 @@ import { useForm } from "react-hook-form";
 import UserList from "./UserList";
 import SelectList from "../SelectList";
 import Button from "../Button";
-import { useCreateTaskMutation, useUpdateTaskMutation } from "../../redux/slices/api/taskApiSlice";
+import { useCreateTaskMutation, useUpdateTaskMutation, useUpdateTaskForAdminMutation } from "../../redux/slices/api/taskApiSlice";
 import { toast } from "sonner";
 import { dateFormatter } from "../../utils";
 
@@ -14,6 +15,8 @@ const LISTS = ["TODO", "IN PROGRESS", "COMPLETED"];
 const PRIORITY = ["HIGH", "MEDIUM", "NORMAL", "NONE"];
 
 const AddTask = ({ open, setOpen, task }) => {
+  const { user } = useSelector((state) => state.auth);
+  
   const defaultValues = {
     title: task?.title || "",
     date: dateFormatter(task?.date || new Date()),
@@ -34,6 +37,7 @@ const AddTask = ({ open, setOpen, task }) => {
 
   const [createTask, { isLoading }] = useCreateTaskMutation();
   const [updateTask, { isLoading: isUpdating }] = useUpdateTaskMutation();
+  const [updateTaskForAdmin, { isLoading: isUpdatingAdmin }] = useUpdateTaskForAdminMutation();
 
   const submitHandler = async (data) => {
     try {
@@ -43,9 +47,17 @@ const AddTask = ({ open, setOpen, task }) => {
         stage,
         priority,
       };
-      const res = task?._id
-        ? await updateTask({ ...newData, _id: task._id }).unwrap()
-        : await createTask(newData).unwrap();
+      
+      let res;
+      if (task?._id) {
+        // Update task - use admin mutation if user is admin
+        res = user?.isAdmin 
+          ? await updateTaskForAdmin({ ...newData, _id: task._id }).unwrap()
+          : await updateTask({ ...newData, _id: task._id }).unwrap();
+      } else {
+        // Create task - only admins can create tasks
+        res = await createTask(newData).unwrap();
+      }
 
       toast.success(res.message);
 
@@ -126,9 +138,10 @@ const AddTask = ({ open, setOpen, task }) => {
 
             <div className='bg-gray-50 py-6 sm:flex sm:flex-row-reverse gap-4'>
               <Button
-                label='Submit'
+                label={isLoading || isUpdating || isUpdatingAdmin ? 'Processing...' : 'Submit'}
                 type='submit'
                 className='bg-blue-600 px-8 text-sm font-semibold text-white hover:bg-blue-700 sm:w-auto'
+                disabled={isLoading || isUpdating || isUpdatingAdmin}
               />
 
               <Button

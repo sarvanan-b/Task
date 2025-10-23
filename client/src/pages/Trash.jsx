@@ -7,12 +7,13 @@ import {
   MdKeyboardDoubleArrowUp,
   MdOutlineRestore,
 } from "react-icons/md";
+import { useSelector } from "react-redux";
 import AddUser from "../components/AddUser";
 import Button from "../components/Button";
 import ConfirmationDialog from "../components/Dialogs";
 import Loading from "../components/Loader";
 import Title from "../components/Title";
-import { useDeleteRestoreTaskMutation, useGetAllTaskQuery } from "../redux/slices/api/taskApiSlice";
+import { useDeleteRestoreTaskMutation, useDeleteRestoreTaskForAdminMutation, useGetAllTaskQuery, useGetAllTasksForAdminQuery } from "../redux/slices/api/taskApiSlice";
 import { PRIOTITYSTYELS, TASK_TYPE } from "../utils";
 import { toast } from "sonner";
 
@@ -23,39 +24,50 @@ const ICONS = {
 };
 
 const Trash = () => {
+  const { user } = useSelector((state) => state.auth);
   const [openDialog, setOpenDialog] = useState(false);
   const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState(null);
   const [type, setType] = useState("delete");
   const [selected, setSelected] = useState("");
 
-  const {data,isLoading,refetch} = useGetAllTaskQuery({
-    strQuery :"",
-    isTrashed : "true",
-    search:"",
-  })
+  // Use admin query if user is admin, otherwise use regular query
+  const {data,isLoading,refetch} = user?.isAdmin 
+    ? useGetAllTasksForAdminQuery({
+        strQuery :"",
+        isTrashed : "true",
+        search:"",
+      })
+    : useGetAllTaskQuery({
+        strQuery :"",
+        isTrashed : "true",
+        search:"",
+      });
 
   const [deleteRestoreTask] = useDeleteRestoreTaskMutation();
+  const [deleteRestoreTaskForAdmin] = useDeleteRestoreTaskForAdminMutation();
 
   const deleteRestoreHandler = async()=>{
     try {
       let result;
+      const mutation = user?.isAdmin ? deleteRestoreTaskForAdmin : deleteRestoreTask;
+      
       switch (type) {
         case "delete":
-          result = await deleteRestoreTask({
+          result = await mutation({
             id:selected ,
             actionType: "delete",
           }).unwrap();
           break;
 
         case "deleteAll":
-          result = await deleteRestoreTask({
+          result = await mutation({
             id:selected ,
             actionType: "deleteAll",
           }).unwrap();
           break;
         case "restore":
-          result = await deleteRestoreTask({
+          result = await mutation({
             id:selected ,
             actionType: "restore",
           }).unwrap();
@@ -63,7 +75,7 @@ const Trash = () => {
 
 
         case "restoreAll":
-          result = await deleteRestoreTask({
+          result = await mutation({
             id:selected ,
             actionType: "restoreAll",
           }).unwrap();

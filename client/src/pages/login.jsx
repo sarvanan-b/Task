@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { toast } from "sonner";
 import Textbox from "../components/Textbox";
 import Button from "../components/Button";
 import Loading from "../components/Loader";
@@ -26,12 +27,24 @@ const Login = () => {
     const result = await login(data).unwrap()
 
     dispatch(setCredentials(result))
+    toast.success("Login successful! Welcome back.");
     navigate("/");
     
    } catch (error) {
-    console.log(error)
-    toast.error(error?.data?.message || error.message); 
+    console.log(error);
     
+    // Handle different error types
+    if (error?.status === 401) {
+      toast.error("Invalid email or password. Please check your credentials.");
+    } else if (error?.status === 403) {
+      toast.error("Account deactivated. Please contact administrator.");
+    } else if (error?.status === 'FETCH_ERROR') {
+      toast.error("Network error. Please check your connection.");
+    } else if (error?.status === 'PARSING_ERROR') {
+      toast.error("Server error. Please try again later.");
+    } else {
+      toast.error(error?.data?.message || "Login failed. Please try again.");
+    }
    }
   };
 
@@ -69,6 +82,10 @@ const Login = () => {
               className="w-full p-3 rounded-lg bg-white bg-opacity-20 text-white placeholder-white focus:ring-2 focus:ring-pink-500"
               register={register("email", {
                 required: "Email Address is required!",
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: "Please enter a valid email address"
+                }
               })}
               error={errors.email ? errors.email.message : ""}
             />
@@ -86,9 +103,18 @@ const Login = () => {
               error={errors.password ? errors.password.message : ""}
             />
 
-            <span className="text-right text-sm text-white hover:underline cursor-pointer">
-              Forgot Password?
-            </span>
+            <div className="flex justify-between text-sm">
+              <span className="text-white hover:underline cursor-pointer">
+                Forgot Password?
+              </span>
+              <button
+                type="button"
+                onClick={() => navigate("/register")}
+                className="text-blue-300 hover:underline"
+              >
+                Don't have an account? Sign up
+              </button>
+            </div>
 
             {/* Submit Button */}
             {isLoading ? ( <Loading/>):<Button

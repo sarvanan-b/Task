@@ -6,7 +6,6 @@ import morgan from "morgan";
 import { dbConnection } from "./utils/index.js";
 import { errorHandler, routeNotFound } from "./middlewares/errorMiddlewaves.js";
 import routes from "./routes/index.js";
-import reminderScheduler from './controllers/reminderScheduler.js';
 
 
 
@@ -18,8 +17,6 @@ dbConnection();
 const PORT = process.env.PORT || 5000;
 
 const app = express();
-
-reminderScheduler();
 
 app.use(
     cors({

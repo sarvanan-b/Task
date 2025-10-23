@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import moment from "moment";
 import React, { useState } from "react";
+import { useSelector } from "react-redux";
 import { FaBug, FaTasks, FaThumbsUp, FaUser } from "react-icons/fa";
 import { GrInProgress } from "react-icons/gr";
 import {
@@ -17,7 +18,7 @@ import { toast } from "sonner";
 import Button from "../components/Button";
 import Loading from "../components/Loader";
 import Tabs from "../components/Tabs";
-import { useGetSingleTaskQuery, usePostTaskActivityMutation } from "../redux/slices/api/taskApiSlice";
+import { useGetSingleTaskQuery, useGetSingleTaskForAdminQuery, usePostTaskActivityMutation, usePostTaskActivityForAdminMutation } from "../redux/slices/api/taskApiSlice";
 import { PRIOTITYSTYELS, TASK_TYPE, getInitials } from "../utils";
 
 
@@ -82,8 +83,14 @@ const act_types = [
 ];
 
 const TaskDetails = () => {
+  const { user } = useSelector((state) => state.auth);
   const { id } = useParams();
-  const {data,isLoading,refetch} = useGetSingleTaskQuery(id);
+  
+  // Use admin query if user is admin, otherwise use regular query
+  const {data,isLoading,refetch} = user?.isAdmin 
+    ? useGetSingleTaskForAdminQuery(id)
+    : useGetSingleTaskQuery(id);
+    
   const [selected, setSelected] = useState(0);
   const task = data?.task;
   if (isLoading)
@@ -230,11 +237,13 @@ const TaskDetails = () => {
 };
 
 const Activities = ({ activity, id,refetch }) => {
+  const { user } = useSelector((state) => state.auth);
   const [selected, setSelected] = useState(act_types[0]);
   const [text, setText] = useState("");
   
 
   const [postActivity,{isLoading}] = usePostTaskActivityMutation();
+  const [postActivityForAdmin,{isLoading:isLoadingAdmin}] = usePostTaskActivityForAdminMutation();
 
   const handleSubmit = async () => {
     try {
@@ -242,10 +251,17 @@ const Activities = ({ activity, id,refetch }) => {
         type:selected?.toLowerCase(),
         activity:text,
       };
-      const result = await postActivity({
-        data:activityData,
-        id
-      }).unwrap();
+      
+      // Use admin mutation if user is admin, otherwise use regular mutation
+      const result = user?.isAdmin 
+        ? await postActivityForAdmin({
+            data:activityData,
+            id
+          }).unwrap()
+        : await postActivity({
+            data:activityData,
+            id
+          }).unwrap();
 
       setText("");
       toast.success(result?.message);
@@ -319,7 +335,7 @@ const Activities = ({ activity, id,refetch }) => {
             placeholder='Type ......'
             className='bg-white w-full mt-10 border border-gray-300 outline-none p-4 rounded-md focus:ring-2 ring-blue-500'
           ></textarea>
-          {isLoading ? (
+          {isLoading || isLoadingAdmin ? (
             <Loading />
           ) : (
             <Button
